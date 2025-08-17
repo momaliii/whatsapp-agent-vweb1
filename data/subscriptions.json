@@ -1,0 +1,70 @@
+{
+  "admin-subscription-id": {
+    "id": "admin-subscription-id",
+    "userId": "admin-user-id",
+    "planId": "enterprise",
+    "planName": "Enterprise",
+    "price": 499,
+    "features": {
+      "whatsappNumbers": -1,
+      "messagesPerMonth": -1,
+      "knowledgeBase": true,
+      "bulkMessaging": true,
+      "apiAccess": true,
+      "whiteLabel": true,
+      "support": "24/7"
+    },
+    "status": "cancelled",
+    "paymentMethod": "manual",
+    "createdAt": "2025-08-16T12:15:36.000Z",
+    "currentPeriodStart": "2025-08-16T12:15:36.000Z",
+    "currentPeriodEnd": "",
+    "autoRenew": true,
+    "cancelledAt": "2025-08-16T13:00:00.978Z"
+  },
+  "e65823e1-3364-40dd-b2b8-aa957e69e788": {
+    "id": "e65823e1-3364-40dd-b2b8-aa957e69e788",
+    "userId": "16d158da-ce91-4790-aef6-c8b2e220b634",
+    "planId": "starter",
+    "planName": "Starter",
+    "price": 29,
+    "features": {
+      "whatsappNumbers": 1,
+      "messagesPerMonth": 500,
+      "knowledgeBase": false,
+      "bulkMessaging": false,
+      "apiAccess": false,
+      "whiteLabel": false,
+      "support": "email"
+    },
+    "status": "cancelled",
+    "paymentMethod": "stripe",
+    "createdAt": "2025-08-16T12:38:27.344Z",
+    "currentPeriodStart": "2025-08-16T12:38:27.344Z",
+    "currentPeriodEnd": "2025-09-15T12:38:27.344Z",
+    "autoRenew": true,
+    "cancelledAt": "2025-08-16T12:59:52.094Z"
+  },
+  "fb4102fc-4997-4752-be62-24f40262430b": {
+    "id": "fb4102fc-4997-4752-be62-24f40262430b",
+    "userId": "089561dc-0c36-429d-a7a1-4222bdce24d1",
+    "planId": "enterprise",
+    "planName": "Enterprise",
+    "price": 499,
+    "features": {
+      "whatsappNumbers": -1,
+      "messagesPerMonth": -1,
+      "knowledgeBase": true,
+      "bulkMessaging": true,
+      "apiAccess": true,
+      "whiteLabel": true,
+      "support": "24/7"
+    },
+    "status": "active",
+    "paymentMethod": "stripe",
+    "createdAt": "2025-08-16T12:45:48.153Z",
+    "currentPeriodStart": "2025-08-16T12:45:48.153Z",
+    "currentPeriodEnd": "2025-09-15T12:45:48.153Z",
+    "autoRenew": true
+  }
+}

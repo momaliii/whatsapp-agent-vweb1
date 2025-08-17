@@ -1,0 +1,39 @@
+{
+  "name": "whatsapp-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhatsApp AI agent using WhatsApp Cloud API and OpenAI",
+  "main": "src/server.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "dev:web": "nodemon src/whatsapp-web.js",
+    "start:web": "node src/whatsapp-web.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "cheerio": "^1.1.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mammoth": "^1.10.0",
+    "mime-types": "^2.1.35",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.52.1",
+    "pdf-parse": "^1.1.1",
+    "puppeteer": "^24.16.1",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.23.0",
+    "xlsx": "^0.18.5"
+  },
+  "optionalDependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

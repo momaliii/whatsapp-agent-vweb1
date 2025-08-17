@@ -1,0 +1,25 @@
+{
+  "progress": {
+    "total": 0,
+    "sent": 0,
+    "failed": 0,
+    "done": true,
+    "reportId": "1755420007753",
+    "currentNumber": "",
+    "status": "completed",
+    "startTime": 1755420007754,
+    "estimatedTimeRemaining": null,
+    "messagesPerMinute": 0,
+    "messagesSinceLastSleep": 0,
+    "rows": []
+  },
+  "recipients": [],
+  "template": "",
+  "minDelayMs": 2000,
+  "maxDelayMs": 5000,
+  "media": null,
+  "caption": "",
+  "sleepAfterCount": 10,
+  "sleepDurationMs": 30000,
+  "lastSaved": 1755420007755
+}

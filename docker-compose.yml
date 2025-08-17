@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  whatsapp-agent:
+    build: .
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DASHBOARD_PORT=4000
+      # Add your environment variables here or use .env file
+      # - OPENAI_API_KEY=your_openai_api_key
+      # - OPENAI_MODEL=gpt-4o-mini
+      # - SYSTEM_PROMPT=You are a helpful WhatsApp assistant. Keep replies brief and friendly.
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add PostgreSQL for production
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: whatsapp_agent
+  #     POSTGRES_USER: whatsapp_user
+  #     POSTGRES_PASSWORD: your_password_here
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
