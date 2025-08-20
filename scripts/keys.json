@@ -1,0 +1,42 @@
+[
+  {
+    "key": "QW-0099",
+    "validUntil": "2025-08-20T18:08:00.000Z",
+    "singleUse": true,
+    "used": false,
+    "boundInstanceId": null,
+    "createdAt": "2025-08-19T21:08:32.390Z"
+  },
+  {
+    "key": "QWW-289-333",
+    "validUntil": "2025-08-19T22:10:00.000Z",
+    "singleUse": true,
+    "used": false,
+    "boundInstanceId": null,
+    "createdAt": "2025-08-19T21:10:48.474Z"
+  },
+  {
+    "key": "WSSA-9823983",
+    "validUntil": "2025-08-21T21:13:00.000Z",
+    "singleUse": true,
+    "used": false,
+    "boundInstanceId": null,
+    "createdAt": "2025-08-19T21:13:48.771Z"
+  },
+  {
+    "key": "THH837-ZMH583-BAP",
+    "validUntil": "2026-08-19T21:26:28.222Z",
+    "singleUse": true,
+    "used": false,
+    "boundInstanceId": null,
+    "createdAt": "2025-08-19T21:26:28.222Z"
+  },
+  {
+    "key": "XKN383-PWX892-CHZ",
+    "validUntil": "2026-08-19T21:26:32.885Z",
+    "singleUse": true,
+    "used": true,
+    "boundInstanceId": "58abdb6a04f3a943",
+    "createdAt": "2025-08-19T21:26:32.885Z"
+  }
+]

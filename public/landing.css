@@ -1,0 +1,110 @@
+/* Animated background */
+.landing{--bg:#0a0f1d;--panel:#0c1628;--ink:#e6f1ea;--muted:#9fb0be;--brand:#25d366;--accent:#128c7e;--border:#19314a;display:block;width:100%;background:radial-gradient(1200px 600px at 110% -10%,rgba(37,211,102,.12),transparent),linear-gradient(180deg,#0a0f1d 0%,#0a0f1d 60%,#090e1a 100%);background-size:160% 160%, 100% 100%;animation:bgShift 18s ease-in-out infinite alternate;color:var(--ink)}
+@keyframes bgShift{0%{background-position:0% 0%, 0 0}100%{background-position:100% 20%, 0 0}}
+.landing *{box-sizing:border-box}
+.landing html,.landing body{margin:0;padding:0}
+.landing .container{max-width:1120px;margin:0 auto;padding:0 16px}
+
+/* Sticky translucent nav */
+.landing .landing-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:14px 0;background:rgba(9,14,26,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid rgba(25,49,74,0)}
+.landing .landing-links{display:flex;align-items:center;gap:18px}
+.landing .landing-nav a{color:var(--ink);opacity:.9;text-decoration:none}
+
+/* Hero */
+.landing .hero{padding:56px 0 28px}
+.landing .hero-grid{display:grid;gap:24px;align-items:center}
+@media(min-width:900px){.landing .hero-grid{grid-template-columns:1.1fr .9fr}}
+.landing .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);margin-bottom:10px}
+.landing .hero h1{font-size:clamp(30px,5vw,52px);margin:0 0 10px;background:linear-gradient(90deg,#e6f1ea,#bfe8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.landing .hero p{margin:0 auto 18px;max-width:640px;color:var(--muted)}
+.landing .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.landing .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#0e1a30;color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;text-decoration:none;transition:transform .15s ease, box-shadow .2s ease}
+.landing .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.landing .btn.primary,.landing .btn.btn-success{background:var(--brand);border-color:transparent;color:#00160a}
+.landing .btn.ghost{background:transparent}
+.landing .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.landing .badge{font-size:12px;color:var(--muted);border:1px solid var(--border);padding:6px 10px;border-radius:999px;background:#0d1a2e}
+
+/* Device mock */
+.landing .hero-right{display:flex;justify-content:center}
+.landing .device{width:320px;height:560px;border-radius:28px;background:linear-gradient(180deg,#0c1b2f,#0b1324);border:1px solid #13243a;box-shadow:0 30px 80px rgba(0,0,0,.45), inset 0 0 0 6px rgba(255,255,255,.03);position:relative;padding:16px}
+.landing .device-notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:8px;background:#0e1a30;border-radius:999px;border:1px solid #122641}
+.landing .device-chat{position:absolute;inset:40px 16px 16px 16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.landing .bubble{max-width:78%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.35}
+.landing .bubble.me{align-self:flex-end;background:#163154}
+.landing .bubble.bot{align-self:flex-start;background:#0f2746}
+
+/* Sections */
+.landing .section{padding:28px 0}
+.landing .h2{font-size:24px;margin:0 0 14px}
+.landing .grid{display:grid;gap:16px}
+@media(min-width:900px){.landing .grid.cols-3{grid-template-columns:repeat(3,1fr)}.landing .grid.cols-2{grid-template-columns:1.2fr .8fr}}
+
+/* Cards */
+.landing .card{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;transition:transform .15s ease, box-shadow .2s ease, border-color .2s ease}
+.landing .card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.35);border-color:#22527a}
+.landing .card h3{margin:0 0 8px}
+.landing .card p{color:var(--muted);margin:0 0 8px}
+
+/* Feature chips */
+.landing .chips{display:flex;gap:8px;flex-wrap:wrap}
+.landing .chip{background:#0f2037;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:13px}
+
+/* Tabs (kept for demos) */
+.landing .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.landing .tab{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e1a30;color:var(--ink);cursor:pointer}
+.landing .tab.active{background:var(--brand);border-color:transparent;color:#00160a}
+.landing .panel{display:none}
+.landing .panel.active{display:block}
+
+/* Demos */
+.landing .demo{background:#0b1b31;border:1px dashed var(--border);border-radius:12px;padding:12px}
+.landing .chat{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto}
+.landing .msg{padding:10px 12px;border-radius:12px;max-width:90%}
+.landing .msg.me{align-self:flex-end;background:#163154}
+.landing .msg.bot{align-self:flex-start;background:#0f2746}
+.landing .input-row{display:flex;gap:8px;margin-top:10px}
+.landing .input{flex:1;background:#0e1a30;border:1px solid var(--border);color:var(--ink);padding:10px 12px;border-radius:10px}
+
+/* Steps */
+.landing .steps{counter-reset:step}
+.landing .step{display:flex;gap:12px;align-items:flex-start}
+.landing .step .num{counter-increment:step;background:#0e1a30;border:1px solid var(--border);width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.landing .step .num::after{content:counter(step)}
+
+/* Services */
+.landing .services{padding:24px 0}
+.landing .service-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(18,140,126,.25),rgba(37,211,102,.15));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:22px}
+.landing .services .card{min-height:180px;display:flex;flex-direction:column;justify-content:space-between}
+
+/* Trusted row */
+.landing .trusted{opacity:.9;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.landing .trusted .logo{opacity:.8;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:#0e1a30}
+
+/* Reveal on scroll */
+.landing .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease, transform .5s ease}
+.landing .reveal.show{opacity:1;transform:none}
+
+/* Footer */
+.landing .landing-footer{padding:18px 0;border-top:1px solid var(--border);color:var(--muted);text-align:center}
+.landing .logo-word{font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#25d366,#128c7e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.landing .toggle-row{display:flex;justify-content:flex-end;margin:8px 0}
+.landing .toggle{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.landing .pricing-cards .price-card .price{font-size:32px;font-weight:800;margin:6px 0 10px}
+.landing .pricing-cards .price-card ul{margin:0 0 10px 18px;color:var(--muted)}
+.landing .pricing-cards .price-card{border-image:linear-gradient(135deg,rgba(18,140,126,.25),rgba(37,211,102,.15)) 1}
+.landing .counter{font-weight:800;font-size:28px;color:#c4f0d3}
+.landing .sticky-cta{position:sticky;bottom:0;background:rgba(9,14,26,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--border);padding:10px 0;z-index:15}
+.landing #trusted .logo{font-weight:700}
+.landing #trusted .brand{opacity:.95;border:1px solid var(--border);border-radius:12px;padding:10px 16px;background:#0e1a30;color:var(--ink);font-weight:700}
+.landing .sticky-cta .container{display:flex;gap:10px;justify-content:center}
+.landing .landing-footer{margin-bottom:62px}
+.landing .usecases .card{min-height:120px}
+.landing .compare{display:grid;gap:8px}
+.landing .compare .row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.landing .compare .row:first-child{border-bottom-color:transparent}
+.landing .whatsapp-fab{position:fixed;right:16px;bottom:80px;z-index:30;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#25d366,#128c7e);color:#00160a;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12)}
+.landing .top-fab{position:fixed;right:16px;bottom:150px;z-index:40;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#0e1a30;color:var(--ink);text-decoration:none;border:1px solid var(--border);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .25s ease, transform .25s ease, box-shadow .2s ease}
+.landing .top-fab.show{opacity:1;pointer-events:auto;transform:none}
+.landing .top-fab:hover{box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.landing form#ctaEmailForm .input{min-width:220px}

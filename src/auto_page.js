@@ -10,6 +10,9 @@ const { renderNav, showToast, setLoading, validateForm, createModal, createFileU
 
 function createAutoPage() {
   const app = express.Router();
+  // Accept both form submissions and JSON payloads for API routes
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
   const upload = multer({ 
     storage: multer.memoryStorage(), 
     limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
@@ -423,8 +426,7 @@ function render(cfg) {
 
   <script>
     (function() {
-      // Initialize UI enhancements
-      initAutoPage();
+      // Initialize UI enhancements will be invoked after functions are defined
       
       // Handle URL parameters for success/error messages
       const urlParams = new URLSearchParams(window.location.search);
@@ -490,6 +492,32 @@ function render(cfg) {
           uploadArea.querySelector('p').textContent = 'Selected: ' + file.name;
         } else {
           uploadArea.querySelector('p').textContent = 'Drag & drop media file here or browse';
+        }
+      }
+
+      // Lightweight client-side validateForm used on this page
+      function validateForm(form) {
+        const keyword = (form.keyword?.value || '').trim();
+        const type = (form.type?.value || 'text');
+        if (!keyword) return false;
+        if (type === 'text') {
+          return (form.value?.value || '').trim().length > 0;
+        }
+        // For media types, either a file was selected or value contains a URL
+        const hasFile = (form.asset && form.asset.files && form.asset.files.length > 0);
+        const hasUrl = (form.value?.value || '').trim().length > 0;
+        return hasFile || hasUrl;
+      }
+
+      // Minimal setLoading used on this page to show loading state on buttons
+      function setLoading(btn, isLoading) {
+        if (!btn) return;
+        if (isLoading) {
+          btn.setAttribute('disabled', 'true');
+          btn.classList.add('loading');
+        } else {
+          btn.removeAttribute('disabled');
+          btn.classList.remove('loading');
         }
       }
 
@@ -584,17 +612,39 @@ function render(cfg) {
 
       window.enableAllRules = function() {
         if (confirm('Enable all rules?')) {
-          // Enable all rules logic
-          showToast('All rules enabled', 'success');
-          refreshRules();
+          fetch('/auto/api/rules')
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) return;
+              const rules = (data.rules || []).map(r => ({ ...r, enabled: true }));
+              return fetch('/settings/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ autoReplies: rules })
+              });
+            })
+            .then(res => res && res.json ? res.json() : null)
+            .then(() => { showToast('All rules enabled', 'success'); refreshRules(); })
+            .catch(() => showToast('Failed to enable all rules', 'error'));
         }
       };
 
       window.disableAllRules = function() {
         if (confirm('Disable all rules?')) {
-          // Disable all rules logic
-          showToast('All rules disabled', 'success');
-          refreshRules();
+          fetch('/auto/api/rules')
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) return;
+              const rules = (data.rules || []).map(r => ({ ...r, enabled: false }));
+              return fetch('/settings/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ autoReplies: rules })
+              });
+            })
+            .then(res => res && res.json ? res.json() : null)
+            .then(() => { showToast('All rules disabled', 'success'); refreshRules(); })
+            .catch(() => showToast('Failed to disable all rules', 'error'));
         }
       };
 
@@ -608,9 +658,14 @@ function render(cfg) {
 
       window.clearAllRules = function() {
         if (confirm('Are you sure you want to delete all rules? This action cannot be undone.')) {
-          // Clear all rules logic
-          showToast('All rules cleared', 'success');
-          refreshRules();
+          fetch('/settings/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ autoReplies: [] })
+          })
+          .then(res => res.json())
+          .then(() => { showToast('All rules cleared', 'success'); refreshRules(); })
+          .catch(() => showToast('Failed to clear all rules', 'error'));
         }
       };
 
@@ -619,7 +674,7 @@ function render(cfg) {
           .then(response => response.json())
           .then(data => {
             if (data.success) {
-              document.getElementById('rulesContainer').innerHTML = renderRulesList(data.rules);
+              document.getElementById('rulesContainer').innerHTML = clientRenderRulesList(data.rules);
               updateStats(data.rules);
             }
           });
@@ -637,10 +692,88 @@ function render(cfg) {
         document.querySelectorAll('.stat-number')[2].textContent = disabledRules;
       }
 
+      function getTypeIcon(type) {
+        const icons = { text: '📝', image: '🖼️', video: '🎥', audio: '🎵', file: '📄' };
+        return icons[type] || '📝';
+      }
+
+      function clientRenderRuleContent(rule) {
+        switch (rule.type) {
+          case 'text':
+            return '<p class="rule-text">' + escapeHtml(rule.value || '') + '</p>';
+          case 'image':
+            return '<div class="rule-media"><img src="' + escapeHtml(rule.value || '') + '" alt="Auto reply image" class="rule-image">' + (rule.caption ? '<p class="rule-caption">' + escapeHtml(rule.caption) + '</p>' : '') + '</div>';
+          case 'video':
+            return '<div class="rule-media"><video controls class="rule-video"><source src="' + escapeHtml(rule.value || '') + '" type="video/mp4">Your browser does not support the video tag.</video>' + (rule.caption ? '<p class="rule-caption">' + escapeHtml(rule.caption) + '</p>' : '') + '</div>';
+          case 'audio':
+            return '<div class="rule-media"><audio controls class="rule-audio"><source src="' + escapeHtml(rule.value || '') + '" type="audio/mpeg">Your browser does not support the audio tag.</audio>' + (rule.caption ? '<p class="rule-caption">' + escapeHtml(rule.caption) + '</p>' : '') + '</div>';
+          case 'file':
+            return '<div class="rule-media"><a href="' + escapeHtml(rule.value || '') + '" target="_blank" class="rule-file">📄 Download File</a>' + (rule.caption ? '<p class="rule-caption">' + escapeHtml(rule.caption) + '</p>' : '') + '</div>';
+          default:
+            return '<p class="rule-text">' + escapeHtml(rule.value || '') + '</p>';
+        }
+      }
+
+      function clientRenderRulesList(rules) {
+        if (!Array.isArray(rules) || rules.length === 0) {
+          return '<div class="empty-state"><p>No auto reply rules configured yet</p></div>';
+        }
+        return rules.map(function(rule) {
+          return (
+            '<div class="rule-card ' + (rule.enabled !== false ? 'enabled' : 'disabled') + '" data-keyword="' + escapeHtml(rule.keyword) + '">' +
+              '<div class="rule-header">' +
+                '<div class="rule-info">' +
+                  '<h3>' + escapeHtml(rule.keyword) + '</h3>' +
+                  '<span class="rule-type">' + getTypeIcon(rule.type) + ' ' + rule.type + '</span>' +
+                '</div>' +
+                '<div class="rule-actions">' +
+                  '<button class="btn btn-sm ' + (rule.enabled !== false ? 'btn-success' : 'btn-outline') + '" onclick="toggleRule(&quot;' + escapeHtml(rule.keyword) + '&quot;,' + (rule.enabled !== false) + ')">' +
+                    (rule.enabled !== false ? '🟢 Active' : '🔴 Inactive') +
+                  '</button>' +
+                  '<button class="btn btn-sm btn-outline" onclick="editRule(&quot;' + escapeHtml(rule.keyword) + '&quot;)">✏️ Edit</button>' +
+                  '<button class="btn btn-sm btn-danger" onclick="deleteRule(&quot;' + escapeHtml(rule.keyword) + '&quot;)">🗑️ Delete</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="rule-content">' + clientRenderRuleContent(rule) + '</div>' +
+              '<div class="rule-meta"><small>Created: ' + (rule.createdAt ? new Date(rule.createdAt).toLocaleDateString() : 'Unknown') + '</small></div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      // Minimal implementations for rule actions
+      window.toggleRule = function(keyword, currentEnabled) {
+        fetch('/auto/api/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword, enabled: !currentEnabled })
+        })
+        .then(r => r.json())
+        .then(() => refreshRules());
+      };
+
+      window.deleteRule = function(keyword) {
+        if (!confirm('Delete this rule?')) return;
+        fetch('/auto/api/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword })
+        })
+        .then(r => r.json())
+        .then(() => refreshRules());
+      };
+
+      window.editRule = function(keyword) {
+        alert('Editing rules inline is not implemented yet. You can delete and re-create the rule.');
+      };
+
       function initAutoPage() {
         // Initialize any page-specific functionality
         toggleResponseFields(); // Set initial state
       }
+
+      // Now that all functions are defined, initialize the page
+      initAutoPage();
 
       function escapeHtml(str) {
         const div = document.createElement('div');

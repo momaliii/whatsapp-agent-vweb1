@@ -16,6 +16,7 @@ const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const openaiModel = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const openaiClient = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
+const { isLicensed, verifyLicense } = require('./license');
 
 app.get('/', (req, res) => {
   res.send('WhatsApp AI agent is running');
@@ -42,6 +43,16 @@ app.post('/webhook', async (req, res) => {
     const message = value?.messages?.[0];
 
     if (message && message.type === 'text') {
+      if (!isLicensed()) {
+        try { await verifyLicense({ save: true }); } catch {}
+      }
+      if (!isLicensed()) {
+        // Reply with activation prompt if possible, but do not block webhook 200
+        try {
+          await sendWhatsAppText(message.from, 'Activation required. Please open the dashboard Settings and enter your license key.');
+        } catch {}
+        return res.sendStatus(200);
+      }
       const from = message.from; // WhatsApp user phone number (international format)
       const userText = message.text?.body || '';
 
@@ -108,6 +119,8 @@ app.listen(port, () => {
   if (!whatsappToken) console.warn('Missing META_WHATSAPP_TOKEN');
   if (!phoneNumberId) console.warn('Missing META_PHONE_NUMBER_ID');
   if (!openaiApiKey) console.warn('Missing OPENAI_API_KEY');
+  // Attempt a license verification on startup (non-blocking)
+  try { verifyLicense({ save: true }); } catch {}
 });
 
 module.exports = app;

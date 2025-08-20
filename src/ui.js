@@ -56,6 +56,10 @@ function renderNav(active) {
         <span class="ico">🚀</span>
         <span>Deploy</span>
       </a>
+      <a class="item" href="/logout" data-tooltip="Logout" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+        <span class="ico">🚪</span>
+        <span>Logout</span>
+      </a>
     </nav>
   </aside>`;
 }

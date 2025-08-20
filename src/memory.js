@@ -2,21 +2,33 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getConfig } = require('./config');
 
 const dataDir = path.join(__dirname, '..', 'data');
-const memoryPath = path.join(dataDir, 'memory.json');
-const profilesPath = path.join(dataDir, 'profiles.json');
+function activeProfileSafe(){
+  try {
+    const p = (getConfig().activeProfile || 'default').toString();
+    return p.replace(/[^a-z0-9_\-]/gi, '_');
+  } catch { return 'default'; }
+}
+function memoryPathForProfile(){
+  return path.join(dataDir, `memory.${activeProfileSafe()}.json`);
+}
+function profilesPathForProfile(){
+  return path.join(dataDir, `profiles.${activeProfileSafe()}.json`);
+}
 const MAX_MESSAGES_PER_CONTACT = 500; // retain larger history for viewer
 
 function ensureFile() {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  if (!fs.existsSync(memoryPath)) fs.writeFileSync(memoryPath, JSON.stringify({}, null, 2));
+  const memPath = memoryPathForProfile();
+  if (!fs.existsSync(memPath)) fs.writeFileSync(memPath, JSON.stringify({}, null, 2));
 }
 
 function readAll() {
   ensureFile();
   try {
-    return JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+    return JSON.parse(fs.readFileSync(memoryPathForProfile(), 'utf8'));
   } catch {
     return {};
   }
@@ -24,7 +36,7 @@ function readAll() {
 
 function writeAll(all) {
   ensureFile();
-  fs.writeFileSync(memoryPath, JSON.stringify(all, null, 2));
+  fs.writeFileSync(memoryPathForProfile(), JSON.stringify(all, null, 2));
 }
 
 function getConversation(contactId) {
@@ -181,13 +193,14 @@ function countMessagesSinceLastSummary(contactId) {
 // -------- Profiles (persistent per-contact preferences) --------
 function ensureProfilesFile() {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  if (!fs.existsSync(profilesPath)) fs.writeFileSync(profilesPath, JSON.stringify({}, null, 2));
+  const p = profilesPathForProfile();
+  if (!fs.existsSync(p)) fs.writeFileSync(p, JSON.stringify({}, null, 2));
 }
 
 function readProfiles() {
   ensureProfilesFile();
   try {
-    return JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
+    return JSON.parse(fs.readFileSync(profilesPathForProfile(), 'utf8'));
   } catch {
     return {};
   }
@@ -195,7 +208,7 @@ function readProfiles() {
 
 function writeProfiles(all) {
   ensureProfilesFile();
-  fs.writeFileSync(profilesPath, JSON.stringify(all, null, 2));
+  fs.writeFileSync(profilesPathForProfile(), JSON.stringify(all, null, 2));
 }
 
 function getContactProfile(contactId) {

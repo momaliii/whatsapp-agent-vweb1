@@ -1,9 +1,16 @@
 {
-  "systemPrompt": "You are a helpful WhatsApp assistant. Keep replies brief and friendly.",
+  "systemPrompt": "",
   "model": "gpt-4o-mini",
   "temperature": 0.7,
   "maxTokens": 300,
-  "botEnabled": false,
+  "botEnabled": true,
+  "performanceMode": false,
+  "debugMode": false,
+  "licenseKey": "XKN383-PWX892-CHZ",
+  "licenseValid": true,
+  "licenseValidUntil": "2026-08-19T21:26:32.885Z",
+  "licenseVerifiedAt": "2025-08-20T00:13:09.955Z",
+  "licenseVerifiedKeyHash": "64fa1e3fa117b9756f878a9a74ad4053db544c52",
   "easyOrders": {
     "enabled": false,
     "webhookSecret": "",
@@ -25,9 +32,10 @@
   "autoReplies": [],
   "profiles": [
     "default",
-    "roma"
+    "roma",
+    "----"
   ],
-  "activeProfile": "roma",
+  "activeProfile": "default",
   "bulkTemplates": [
     {
       "name": "roma 3",
@@ -39,5 +47,57 @@
       "template": "أهلًا يا {{VAR1}} 😍💖\nتم تأكيد الأوردر: {{VAR2}}✅✨\nعدد: {{VAR3}}\nالمنتج:  {{VAR4}} - {{VAR5}}\nالسعر:{{VAR6}} ج.م\nالعنوان: {{VAR7}}\nممكن تأكدي العنوان ولو فيه رقم تليفون تاني يسهّل الوصول لحضرتك ممكن تبعتيه علشان نضمن إن المنتج يوصلك بسرعة ❤📍\n\n🚚 شركة الشحن والمندوب هيكلموكي في خلال 24-48 ساعة علي الفون او الواتساب عشان تستلمي طلبك 🌟\n{{date}}, {{time}}",
       "caption": ""
     }
-  ]
+  ],
+  "openaiApiKey": "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",
+  "autoReplies.default": [],
+  "bulkTemplates.default": [
+    {
+      "name": "roma 3",
+      "template": "أهلًا يا {{VAR1}} 😍💖\nتم تأكيد الأوردر:  {{VAR2}}✅✨\nعدد: {{VAR3}}\nالمنتج:  {{VAR4}} - {{VAR5}}\nالسعر:{{VAR6}} ج.م\nالعنوان: {{VAR7}}\nممكن تأكدي العنوان ولو فيه رقم تليفون تاني يسهّل الوصول لحضرتك ممكن تبعتيه علشان نضمن إن المنتج يوصلك بسرعة ❤📍\n\n🚚 شركة الشحن والمندوب هيكلموكي في خلال 24-48 ساعة علي الفون او الواتساب عشان تستلمي طلبك 🌟\n",
+      "caption": ""
+    },
+    {
+      "name": "roma4",
+      "template": "أهلًا يا {{VAR1}} 😍💖\nتم تأكيد الأوردر: {{VAR2}}✅✨\nعدد: {{VAR3}}\nالمنتج:  {{VAR4}} - {{VAR5}}\nالسعر:{{VAR6}} ج.م\nالعنوان: {{VAR7}}\nممكن تأكدي العنوان ولو فيه رقم تليفون تاني يسهّل الوصول لحضرتك ممكن تبعتيه علشان نضمن إن المنتج يوصلك بسرعة ❤📍\n\n🚚 شركة الشحن والمندوب هيكلموكي في خلال 24-48 ساعة علي الفون او الواتساب عشان تستلمي طلبك 🌟\n{{date}}, {{time}}",
+      "caption": ""
+    }
+  ],
+  "autoReplies.roma": [],
+  "bulkTemplates.roma": [
+    {
+      "name": "roma 3",
+      "template": "أهلًا يا {{VAR1}} 😍💖\nتم تأكيد الأوردر:  {{VAR2}}✅✨\nعدد: {{VAR3}}\nالمنتج:  {{VAR4}} - {{VAR5}}\nالسعر:{{VAR6}} ج.م\nالعنوان: {{VAR7}}\nممكن تأكدي العنوان ولو فيه رقم تليفون تاني يسهّل الوصول لحضرتك ممكن تبعتيه علشان نضمن إن المنتج يوصلك بسرعة ❤📍\n\n🚚 شركة الشحن والمندوب هيكلموكي في خلال 24-48 ساعة علي الفون او الواتساب عشان تستلمي طلبك 🌟\n",
+      "caption": ""
+    },
+    {
+      "name": "roma4",
+      "template": "أهلًا يا {{VAR1}} 😍💖\nتم تأكيد الأوردر: {{VAR2}}✅✨\nعدد: {{VAR3}}\nالمنتج:  {{VAR4}} - {{VAR5}}\nالسعر:{{VAR6}} ج.م\nالعنوان: {{VAR7}}\nممكن تأكدي العنوان ولو فيه رقم تليفون تاني يسهّل الوصول لحضرتك ممكن تبعتيه علشان نضمن إن المنتج يوصلك بسرعة ❤📍\n\n🚚 شركة الشحن والمندوب هيكلموكي في خلال 24-48 ساعة علي الفون او الواتساب عشان تستلمي طلبك 🌟\n{{date}}, {{time}}",
+      "caption": ""
+    }
+  ],
+  "systemPrompt.roma": "",
+  "model.roma": "gpt-4o-mini",
+  "temperature.roma": 0.7,
+  "maxTokens.roma": 300,
+  "botEnabled.roma": true,
+  "performanceMode.roma": false,
+  "debugMode.roma": false,
+  "notifications.roma": {
+    "enabled": false,
+    "adminWhatsApp": "",
+    "slackWebhookUrl": ""
+  },
+  "easyOrders.roma": {
+    "enabled": false,
+    "webhookSecret": "",
+    "phoneField": "customer",
+    "countryCodePrefix": "",
+    "sendOn": "created",
+    "template": "Hi {{name}}, your order {{order_id}} total {{total}} was received on {{date}}.",
+    "apiKey": "",
+    "listUrl": "https://api.easy-orders.net/api/v1/external-apps/orders?limit=50&updated_after={{updated_after}}",
+    "pollEnabled": false,
+    "pollEverySec": 60,
+    "pollSinceIso": ""
+  }
 }

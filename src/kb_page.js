@@ -3,6 +3,8 @@
 const express = require('express');
 const multer = require('multer');
 const { stats, statsBySource, addPdf, addText, deleteSource, testSearch, getSourceMetadata, rebuildMetadata } = require('./kb');
+const { getConfig } = require('./config');
+const path = require('path');
 
 function createKbPage() {
   const app = express.Router();
@@ -16,7 +18,10 @@ function createKbPage() {
       embeddingsDisabled: process.env.DISABLE_KB_EMBEDDINGS === 'true',
       useFallback: !Boolean(process.env.OPENAI_API_KEY) || process.env.DISABLE_KB_EMBEDDINGS === 'true'
     };
-    res.send(renderKb(s, per, kbStatus));
+    const activeProfile = (getConfig().activeProfile || 'default').toString();
+    const kbFolder = path.join(__dirname, '..', 'kb', activeProfile);
+    const indexFile = path.join(__dirname, '..', 'config', `kb_index.${activeProfile}.json`);
+    res.send(renderKb(s, per, kbStatus, { activeProfile, kbFolder, indexFile }));
   });
 
   app.post('/upload', upload.single('file'), async (req, res) => {
@@ -83,7 +88,7 @@ function createKbPage() {
   return app;
 }
 
-function renderKb(s, per, kbStatus = {}) {
+function renderKb(s, per, kbStatus = {}, kbPaths = {}) {
   // Note: These will be processed on the client side
   const successMsg = ''; // Will be read from URL params in JS
   const errorMsg = ''; // Will be read from URL params in JS
@@ -122,6 +127,7 @@ function renderKb(s, per, kbStatus = {}) {
       <main class="main">
         <div class="container">
           <h1>🧠 Knowledge Base</h1>
+          <p class="note">Active profile: <code>${escapeHtml(kbPaths.activeProfile || 'default')}</code> · Folder: <code>${escapeHtml(kbPaths.kbFolder || '')}</code> · Index: <code>${escapeHtml(kbPaths.indexFile || '')}</code></p>
           
           <div id="messageContainer"></div>
           

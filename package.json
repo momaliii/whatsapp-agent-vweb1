@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "dev:web": "nodemon src/whatsapp-web.js",
-    "start:web": "node src/whatsapp-web.js"
+    "start:web": "node src/whatsapp-web.js",
+    "dev:license-server": "node scripts/license-verifier.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -20,9 +21,13 @@
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
     "mammoth": "^1.10.0",
     "mime-types": "^2.1.35",
     "multer": "^1.4.5-lts.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.6.1",
     "openai": "^4.52.1",
     "pdf-parse": "^1.1.1",
     "puppeteer": "^24.16.1",

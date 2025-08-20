@@ -1,18 +1,1 @@
-{
-  "tst@tst.com": {
-    "id": "16d158da-ce91-4790-aef6-c8b2e220b634",
-    "email": "tst@tst.com",
-    "password": "9afed062d9abaf950b6bf4e55d736e53fa417166f0b4267536815f4901da5542",
-    "company": "",
-    "createdAt": "2025-08-16T12:38:27.343Z",
-    "status": "active"
-  },
-  "admin@yourdomain.com": {
-    "id": "089561dc-0c36-429d-a7a1-4222bdce24d1",
-    "email": "admin@yourdomain.com",
-    "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
-    "company": "System Admin",
-    "createdAt": "2025-08-16T12:45:48.152Z",
-    "status": "active"
-  }
-}
+{}

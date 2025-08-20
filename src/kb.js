@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
 const OpenAI = require('openai');
+const { getConfig } = require('./config');
 
 // Additional file processing libraries (optional)
 let mammoth = null; // For DOCX files
@@ -28,8 +29,20 @@ try {
   console.log('axios not installed - web scraping disabled');
 }
 
-const kbDir = path.join(__dirname, '..', 'kb');
-const indexPath = path.join(__dirname, '..', 'config', 'kb_index.json');
+function activeProfileSafe(){
+  try {
+    const p = (getConfig().activeProfile || 'default').toString();
+    return p.replace(/[^a-z0-9_\-]/gi, '_');
+  } catch { return 'default'; }
+}
+function kbDirForProfile(){
+  return path.join(__dirname, '..', 'kb', activeProfileSafe());
+}
+function indexPathForProfile(){
+  return path.join(__dirname, '..', 'config', `kb_index.${activeProfileSafe()}.json`);
+}
+const kbDir = kbDirForProfile();
+const indexPath = indexPathForProfile();
 
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const embeddingModel = process.env.OPENAI_EMBEDDINGS_MODEL || 'text-embedding-3-small';
@@ -47,10 +60,12 @@ const KB_CONFIG = {
 };
 
 function ensurePaths() {
-  if (!fs.existsSync(kbDir)) fs.mkdirSync(kbDir, { recursive: true });
-  const idxDir = path.dirname(indexPath);
+  const dir = kbDirForProfile();
+  const idxPath = indexPathForProfile();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const idxDir = path.dirname(idxPath);
   if (!fs.existsSync(idxDir)) fs.mkdirSync(idxDir, { recursive: true });
-  if (!fs.existsSync(indexPath)) fs.writeFileSync(indexPath, JSON.stringify({ 
+  if (!fs.existsSync(idxPath)) fs.writeFileSync(idxPath, JSON.stringify({ 
     chunks: [], 
     metadata: {},
     lastUpdated: new Date().toISOString()
@@ -60,7 +75,7 @@ function ensurePaths() {
 function loadIndex() {
   ensurePaths();
   try {
-    const idx = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    const idx = JSON.parse(fs.readFileSync(indexPathForProfile(), 'utf8'));
     
     // Migration: Add missing fields for old index files
     if (!idx.metadata) {
@@ -104,7 +119,7 @@ function loadIndex() {
 function saveIndex(idx) {
   ensurePaths();
   idx.lastUpdated = new Date().toISOString();
-  fs.writeFileSync(indexPath, JSON.stringify(idx, null, 2));
+  fs.writeFileSync(indexPathForProfile(), JSON.stringify(idx, null, 2));
 }
 
 // Improved chunking with semantic boundaries

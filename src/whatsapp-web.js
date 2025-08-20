@@ -9,8 +9,10 @@ const OpenAI = require('openai');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { createDashboardApp } = require('./dashboard');
+const { createAuthRouter, authMiddleware } = require('./auth');
+const { isLicensed, verifyLicense } = require('./license');
 const { getConfig } = require('./config');
-const { appendMessage, buildContext, getLastSummary, saveSummary, countMessagesSinceLastSummary, getContactProfile, updateContactProfile, inferLanguageFromText } = require('./memory');
+const { appendMessage, buildContext, getLastSummary, saveSummary, countMessagesSinceLastSummary, getContactProfile, updateContactProfile, inferLanguageFromText, getConversation } = require('./memory');
 const { search } = require('./kb');
 const fs = require('fs');
 const path = require('path');
@@ -20,12 +22,24 @@ const openaiModelEnv = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const openaiClient = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
 let activeProfile = getConfig().activeProfile || 'default';
+
+const envChromePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH || null;
+const resolvedExecutablePath = envChromePath || (puppeteerLib && typeof puppeteerLib.executablePath === 'function' ? puppeteerLib.executablePath() : undefined);
+
 let client = new Client({
   authStrategy: new LocalAuth({ clientId: `whatsapp-ai-agent-${activeProfile}` }),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    executablePath: puppeteerLib && typeof puppeteerLib.executablePath === 'function' ? puppeteerLib.executablePath() : undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-extensions',
+      '--disable-gpu',
+      '--no-zygote',
+      '--single-process'
+    ],
+    executablePath: resolvedExecutablePath,
   },
 });
 
@@ -47,10 +61,16 @@ client.on('qr', async (qr) => {
 client.on('ready', () => {
   console.log('WhatsApp Web client is ready.');
   connectionState = { status: 'ready', lastQR: null };
+  setTimeout(() => {
+    try { backfillHistory({ maxPerChat: 50 }); } catch (e) { console.error('Backfill error:', e && e.message ? e.message : e); }
+  }, 1000);
 });
 
 client.on('authenticated', () => { connectionState = { status: 'authenticated', lastQR: null }; });
-client.on('disconnected', () => { connectionState = { status: 'disconnected', lastQR: null }; });
+client.on('disconnected', () => {
+  connectionState = { status: 'disconnected', lastQR: null };
+  setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
+});
 
 client.on('message', async (msg) => {
   try {
@@ -63,6 +83,14 @@ client.on('message', async (msg) => {
     if (!text) return;
       const cfgNow = getConfig();
       if (cfgNow && cfgNow.botEnabled === false) return;
+      // License gate
+      if (!isLicensed()) {
+        try { await verifyLicense({ save: true }); } catch {}
+      }
+      if (!isLicensed()) {
+        try { await msg.reply('Activation required. Open dashboard → Settings → enter license key.'); } catch {}
+        return;
+      }
     
     // Auto-replies based on keyword
       const auto = (getConfig().autoReplies || []).filter(r => r.enabled !== false);
@@ -239,12 +267,44 @@ const app = express();
 app.use('/assets', express.static(require('path').join(__dirname, '..', 'public')));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+// Public auth + landing routes
+try {
+  const { router: authRouter } = createAuthRouter();
+  app.use('/', authRouter);
+} catch (e) {
+  console.error('Auth init error:', e.message);
+}
+
+// License gate for web dashboard
+app.use((req, res, next) => {
+  try {
+    if (isLicensed()) return next();
+    const p = String(req.path || '');
+    // Allow settings and assets so the user can input the key and load CSS
+    const allowed =
+      p.startsWith('/settings') ||
+      p.startsWith('/assets') ||
+      p === '/login' ||
+      p === '/signup' ||
+      p === '/license' ||
+      p === '/favicon.ico';
+    if (allowed) return next();
+    // Try to re-verify in case key just changed and state not cached yet
+    try { verifyLicense({ save: true }); } catch {}
+    if (isLicensed()) return next();
+    return res.redirect('/settings?error=' + encodeURIComponent('Activation required: enter your license key to continue or contact support +201060098267'));
+  } catch {
+    return res.redirect('/settings?error=' + encodeURIComponent('Activation required'));
+  }
+});
 function getClient() { return client; }
-app.use('/', createDashboardApp({ client, getClient }));
+// Protect dashboard with user auth as well
+app.use('/', authMiddleware, createDashboardApp({ client, getClient }));
 const { createKbPage } = require('./kb_page');
 app.use('/kb', createKbPage());
 const { createConvosPage } = require('./convos_page');
-app.use('/convos', createConvosPage());
+app.use('/convos', createConvosPage({ getClient }));
 const { createAutoPage } = require('./auto_page');
 app.use('/auto', createAutoPage());
 const { createSettingsPage } = require('./settings_page');
@@ -314,14 +374,28 @@ app.get('/profiles/switch-now', async (req, res) => {
       authStrategy: new LocalAuth({ clientId: `whatsapp-ai-agent-${activeProfile}` }),
       puppeteer: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: puppeteerLib && typeof puppeteerLib.executablePath === 'function' ? puppeteerLib.executablePath() : undefined,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-gpu',
+          '--no-zygote',
+          '--single-process'
+        ],
+        executablePath: resolvedExecutablePath,
       },
     });
     client.on('qr', (qr) => { qrcode.generate(qr, { small: true }); connectionState = { status: 'qr', lastQR: Date.now() }; });
-    client.on('ready', () => { connectionState = { status: 'ready', lastQR: null }; });
+    client.on('ready', () => { 
+      connectionState = { status: 'ready', lastQR: null }; 
+      setTimeout(() => { try { backfillHistory({ maxPerChat: 50 }); } catch (e) { console.error('Backfill error:', e && e.message ? e.message : e); } }, 1000);
+    });
     client.on('authenticated', () => { connectionState = { status: 'authenticated', lastQR: null }; });
-    client.on('disconnected', () => { connectionState = { status: 'disconnected', lastQR: null }; });
+    client.on('disconnected', () => {
+      connectionState = { status: 'disconnected', lastQR: null };
+      setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
+    });
     client.on('message', async (msg) => {
       try {
         if (msg.fromMe) return;
@@ -354,9 +428,21 @@ app.get('/page/:section', (req, res) => {
     res.redirect('/');
   }
 });
+
+// Add status endpoint
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: connectionState.status,
+    isConnected: client.isConnected,
+    isReady: client.isConnected && client.pupPage && !client.pupPage.isClosed(),
+    lastQR: connectionState.lastQR
+  });
+});
 const dashboardPort = process.env.DASHBOARD_PORT || 4000;
 app.listen(dashboardPort, () => {
   console.log(`Dashboard available at http://localhost:${dashboardPort}`);
+  // Ensure we verify on startup so cached state reflects current server decision
+  try { verifyLicense({ save: true }); } catch {}
 });
 
 // Start EasyOrders API poller (if enabled in settings)
@@ -424,3 +510,36 @@ async function sendAutoReply(to, rule) {
 }
 
 
+
+// Import recent history from phone so old messages appear in the web inbox
+async function backfillHistory(opts = {}) {
+  const maxPerChat = typeof opts.maxPerChat === 'number' ? opts.maxPerChat : 50;
+  try {
+    const chats = await client.getChats();
+    for (const chat of chats) {
+      try {
+        if (!chat || chat.isGroup) continue;
+        const contactId = chat.id && chat.id._serialized ? chat.id._serialized : null;
+        if (!contactId) continue;
+        const existing = getConversation(contactId);
+        const lastTs = Array.isArray(existing) && existing.length ? existing[existing.length - 1].ts || 0 : 0;
+        const msgs = await chat.fetchMessages({ limit: maxPerChat });
+        if (!Array.isArray(msgs) || !msgs.length) continue;
+        // Sort ascending by timestamp (WWebJS timestamps are seconds)
+        msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        for (const m of msgs) {
+          try {
+            const body = (m && typeof m.body === 'string') ? m.body.trim() : '';
+            if (!body) continue;
+            const ts = m && m.timestamp ? Number(m.timestamp) * 1000 : Date.now();
+            if (ts <= lastTs) continue;
+            const role = m.fromMe ? 'assistant' : 'user';
+            appendMessage(contactId, role, body, { imported: true, ts });
+          } catch {}
+        }
+      } catch {}
+    }
+  } catch (e) {
+    console.error('History backfill failed:', e && e.message ? e.message : e);
+  }
+}

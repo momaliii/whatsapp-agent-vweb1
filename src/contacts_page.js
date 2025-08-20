@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { listContacts } = require('./memory');
+const { listContacts, getConversation } = require('./memory');
 const { renderNav, showToast, setLoading, createDataTable } = require('./ui');
 
 function createContactsPage(opts = {}) {
@@ -13,8 +13,15 @@ function createContactsPage(opts = {}) {
     let deviceContacts = [];
     try {
       const client = getClient();
-      if (client && client.getChats) {
-        const chats = await client.getChats();
+      if (client && client.getChats && client.isConnected && client.pupPage && !client.pupPage.isClosed()) {
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout getting chats')), 10000)
+        );
+        
+        const chatsPromise = client.getChats();
+        const chats = await Promise.race([chatsPromise, timeoutPromise]);
+        
         deviceContacts = chats.filter(c => !c.isGroup).map(c => ({
           number: c.id.user || c.id._serialized,
           name: c.name || c.pushname || '',
@@ -67,6 +74,122 @@ function createContactsPage(opts = {}) {
       totalContacts: contacts.length,
       activeContacts: contacts.filter(c => c.count > 0).length
     });
+  });
+
+  // Export unique phone numbers gathered from both memory and device chats
+  // Deep-scan memory messages to extract any numeric phone-like patterns
+  function extractNumbersFromMemory() {
+    const memoryContacts = listContacts();
+    const unique = new Set();
+    try {
+      (memoryContacts || []).forEach((c) => {
+        const cid = String(c.contactId || '').trim();
+        if (!cid) return;
+        unique.add(cid);
+        const msgs = getConversation(cid) || [];
+        msgs.forEach((m) => {
+          const text = String((m && m.content) || '');
+          const matches = text.match(/\+?\d[\d\s\-()]{6,}\d/g);
+          if (matches) matches.forEach(n => unique.add(n.replace(/[^+\d]/g, '')));
+        });
+      });
+    } catch {}
+    return unique;
+  }
+
+  app.get('/export-numbers.csv', async (req, res) => {
+    try {
+      const uniqueNumbers = extractNumbersFromMemory();
+
+      try {
+        const client = getClient();
+        if (client && typeof client.getChats === 'function') {
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout getting chats')), 10000));
+          const chatsPromise = client.getChats();
+          const chats = await Promise.race([chatsPromise, timeoutPromise]);
+          (chats || []).filter(c => !c.isGroup).forEach(c => {
+            const n = String(c.id?.user || c.id?._serialized || '').trim();
+            if (n) uniqueNumbers.add(n);
+          });
+        }
+      } catch (e) {
+        // Non-fatal – proceed with memory-only
+      }
+
+      const header = 'Number\n';
+      const body = Array.from(uniqueNumbers).sort().join('\n');
+      const csv = header + body + '\n';
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="whatsapp-numbers.csv"');
+      return res.send(csv);
+    } catch (error) {
+      res.status(500).send('Failed to export numbers: ' + error.message);
+    }
+  });
+
+  // Simple JSON API for numbers (useful for client-side copy to clipboard)
+  app.get('/api/numbers', async (req, res) => {
+    try {
+      const memoryContacts = listContacts();
+      const uniqueNumbers = new Set();
+      (memoryContacts || []).forEach(c => {
+        const n = String(c.contactId || c.number || '').trim();
+        if (n) uniqueNumbers.add(n);
+      });
+      try {
+        const client = getClient();
+        if (client && typeof client.getChats === 'function') {
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout getting chats')), 10000));
+          const chatsPromise = client.getChats();
+          const chats = await Promise.race([chatsPromise, timeoutPromise]);
+          (chats || []).filter(c => !c.isGroup).forEach(c => {
+            const n = String(c.id?.user || c.id?._serialized || '').trim();
+            if (n) uniqueNumbers.add(n);
+          });
+        }
+      } catch {}
+      // Merge device numbers into memory extracted numbers
+      const merged = Array.from(uniqueNumbers).sort();
+      res.json({ success: true, numbers: merged });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Deep scan device chats fetching historical messages to extract numbers
+  app.get('/export-numbers-deep.csv', async (req, res) => {
+    try {
+      const client = getClient();
+      if (!client || typeof client.getChats !== 'function') {
+        return res.status(400).send('WhatsApp client not initialized');
+      }
+      const limit = Math.min(Math.max(parseInt(req.query.limit || '500', 10) || 500, 50), 3000);
+      const unique = new Set();
+      const extract = (t) => {
+        const m = String(t || '').match(/\+?\d[\d\s\-()]{6,}\d/g);
+        if (m) m.forEach(n => unique.add(n.replace(/[^+\d]/g, '')));
+      };
+      // Also include numbers from memory for completeness
+      extractNumbersFromMemory().forEach(n => unique.add(n));
+      let chats = [];
+      try { chats = await client.getChats(); } catch (e) { return res.status(400).send('WhatsApp client not ready'); }
+      for (const chat of (chats || [])) {
+        try {
+          if (chat.isGroup) continue;
+          const base = String(chat.id?.user || chat.id?._serialized || '').trim();
+          if (base) unique.add(base);
+          const messages = await chat.fetchMessages({ limit });
+          for (const msg of (messages || [])) extract(msg && msg.body);
+        } catch {}
+      }
+      const header = 'Number\n';
+      const body = Array.from(unique).filter(Boolean).sort().join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="whatsapp-numbers-deep.csv"');
+      return res.send(header + body + '\n');
+    } catch (error) {
+      res.status(500).send('Deep export failed: ' + error.message);
+    }
   });
 
   // Rate limiting for contacts API
@@ -249,6 +372,14 @@ function render(contacts, deviceContacts) {
                   '<span>📄</span>' +
                   'Export JSON' +
                 '</button>' +
+                '<a class="btn btn-outline" href="/contacts/export-numbers.csv">' +
+                  '<span>📇</span>' +
+                  'Export Numbers' +
+                '</a>' +
+                '<a class="btn btn-outline" href="/contacts/export-numbers-deep.csv?limit=1000" title="Scan older chat messages (slower)">' +
+                  '<span>🧪</span>' +
+                  'Deep Export' +
+                '</a>' +
                 '<button class="btn btn-warning" onclick="refreshContacts()">' +
                   '<span>🔄</span>' +
                   'Refresh' +
@@ -365,6 +496,23 @@ function render(contacts, deviceContacts) {
               '.finally(() => {' +
                 'setLoading(event.target, false);' +
               '});' +
+          '};' +
+
+          'window.exportNumbers = function() {' +
+            'setLoading(event.target, true);' +
+            'fetch(\'/contacts/export-numbers.csv\')' +
+              '.then(resp => resp.blob())' +
+              '.then(blob => {' +
+                'const url = URL.createObjectURL(blob);' +
+                'const a = document.createElement(\'a\');' +
+                'a.href = url;' +
+                'a.download = \'whatsapp-numbers.csv\';' +
+                'a.click();' +
+                'URL.revokeObjectURL(url);' +
+                'showToast(\'Numbers exported successfully\', \'success\');' +
+              '})' +
+              '.catch(() => showToast(\'Failed to export numbers\', \'error\'))' +
+              '.finally(() => setLoading(event.target, false));' +
           '};' +
 
           'window.refreshContacts = function() {' +
